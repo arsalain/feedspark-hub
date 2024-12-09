@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+.image-container {
+  width: 48px; /* Set your desired size */
+  height: 48px;
+  position: relative; /* Ensures it respects bounding box */
+  overflow: hidden; /* Prevent overflow */
+}
+
+.user-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Ensures the image properly fits */
+  border-radius: 50%; /* Makes the image fully circular */
+}
