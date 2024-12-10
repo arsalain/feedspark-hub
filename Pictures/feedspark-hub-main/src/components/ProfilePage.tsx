@@ -7,6 +7,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { db } from "../firebaseconfig";
 import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from "react-router-dom"; 
+import { GoPlus } from "react-icons/go";
 
 function ProfilePage() {
   const email = useSelector((state: RootState) => state.auth.email); 
@@ -103,8 +104,8 @@ function ProfilePage() {
           <p className="text-sm text-gray-500">65 Likes</p>
         </div>
       </div>
-      <div className="absolute bottom-[20px] right-[10px] bg-black rounded-full w-[50px] h-[50px] text-white flex items-center justify-center">
-        <FaPlus className="text-white text-2xl" />
+      <div className="absolute bottom-[20px] right-[10px] bg-black rounded-full w-[50px] h-[50px] text-white flex items-center justify-center"  onClick={() => navigate("/create-post")}>
+        <GoPlus className="text-white text-2xl" />
       </div>
     </div>
   );

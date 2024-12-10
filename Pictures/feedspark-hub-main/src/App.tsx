@@ -4,6 +4,7 @@ import HomePage from "./components/HomePage";
 import FeedPage from "./components/FeedPage";
 import ProfilePage from "./components/ProfilePage";
 import EditProfilePage from "./components/EditProfile";
+import CreatePost from "./components/CreatePost";
 
 export default function App() {
   const isMobileOrTablet = window.innerWidth <= 1024;
@@ -25,6 +26,7 @@ export default function App() {
       <Route path="/feed" element={<FeedPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/edit-profile" element={<EditProfilePage />} />
+      <Route path="/create-post" element={<CreatePost />} />
     </Routes>
   </Router>
   );
