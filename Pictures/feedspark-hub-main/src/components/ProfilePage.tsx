@@ -46,7 +46,7 @@ function ProfilePage() {
     <div className=" bg-white">
       {/* Profile Header */}
       <div className="relative h-[220px]">
-        <FaArrowLeftLong className="absolute top-[25px] left-[20px] text-white text-xl" />
+        <FaArrowLeftLong className="absolute top-[25px] left-[20px] text-white text-xl" onClick={() => navigate("/feed")} />
         <img src={coverImageURL}
             alt="coverimage"
             className=" w-full h-[165px] rounded-b-[15px]">
