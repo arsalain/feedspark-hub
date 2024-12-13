@@ -10,9 +10,7 @@ import { RootState } from "../store";
 import "swiper/css";
 import "swiper/css/pagination";
 import {  Pagination } from 'swiper/modules';
-import { getAuth } from "firebase/auth";
 import { getFirestore, collection, writeBatch, doc, Timestamp,query, where, getDocs } from "firebase/firestore";
-import { FirebaseError } from "firebase/app";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import axios from 'axios';
 import { useNavigate } from "react-router-dom";
@@ -50,12 +48,10 @@ useEffect(() => {
       const newMedia: MediaItem[] = [];
       try {
         const response = await axios.get(
-          `http://localhost:4000/fetch-media?page=${page}&query=nature`
+          `https://bpuback.vercel.app/fetch-media?page=${page}&query=nature`
         );
   
         // Log data to understand the structure
-        console.log(response.data.images, "images");
-        console.log(response.data.videos, "videos");
   
         // Add fetched images
         if (response.data.images) {

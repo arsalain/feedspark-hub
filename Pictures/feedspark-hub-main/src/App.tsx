@@ -6,6 +6,7 @@ import ProfilePage from "./components/ProfilePage";
 import EditProfilePage from "./components/EditProfile";
 import CreatePost from "./components/CreatePost";
 import "./App.css";
+import PostDetail from "./components/PostDetail";
 
 export default function App() {
   const isMobileOrTablet = window.innerWidth <= 1024;
@@ -28,6 +29,7 @@ export default function App() {
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/edit-profile" element={<EditProfilePage />} />
       <Route path="/create-post" element={<CreatePost />} />
+      <Route path="/feed/:id" element={<PostDetail />} />
     </Routes>
   </Router>
   );

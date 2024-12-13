@@ -1,7 +1,6 @@
-import  { useState,useEffect } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { useState, useEffect } from "react";
 import { db, storage } from "../firebaseconfig";
-import { doc, updateDoc,getDoc } from "firebase/firestore";
+import { doc, updateDoc, getDoc, query, where, getDocs,collection, } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useSelector } from "react-redux";
 import { RootState } from "../store";
@@ -10,90 +9,92 @@ import { FaPen } from "react-icons/fa";
 import { useNavigate } from "react-router-dom"; 
 
 function EditProfilePage() {
-  const [userName, setUserName] = useState("");
-  const [userBio, setUserBio] = useState("");
-  const [userPhoto, setUserPhoto] = useState<File | null>(null);
-  const [coverPhoto, setCoverPhoto] = useState<File | null>(null); 
-  const [loading, setLoading] = useState(false); 
-  const email = useSelector((state: RootState) => state.auth.email); 
-  const navigate = useNavigate();
-  const handleSave = async () => {
-    setLoading(true); // Show loader
-    try {
-      const auth = getAuth();
-      const user = auth.currentUser;
+    const [userName, setUserName] = useState("");
+    const [userBio, setUserBio] = useState("");
+    const [userPhoto, setUserPhoto] = useState<File | null>(null);
+    const [coverPhoto, setCoverPhoto] = useState<File | null>(null); 
+    const [loading, setLoading] = useState(false); 
+    const email = useSelector((state: RootState) => state.auth.email); 
+    const navigate = useNavigate();
   
-      if (!user) return;
+    const handleSave = async () => {
+      setLoading(true); // Show loader
+      try {
+        // Fetch the user document by email
+        const userQuery = query(collection(db, "users"), where("email", "==", email));
+        const querySnapshot = await getDocs(userQuery);
+        const userDoc = querySnapshot.docs[0];
+        
+        if (!userDoc) return;
   
-      const userDocRef = doc(db, "users", user.uid);
-      const updates: { name?: string; bio?: string; photoURL?: string; coverImageURL?: string } = {};
-  
-      if (userName) updates.name = userName;
-      if (userBio) updates.bio = userBio;
-  
-      if (userPhoto && userPhoto.size > 0) { // Only upload if a valid file is selected
-        const photoRef = ref(storage, `users/${user.uid}/profile.jpg`);
-        await uploadBytes(photoRef, userPhoto);
-        updates.photoURL = await getDownloadURL(photoRef);
+        const userDocRef = doc(db, "users", userDoc.id);
+        const updates: { name?: string; bio?: string; photoURL?: string; coverImageURL?: string } = {};
+    
+        if (userName) updates.name = userName;
+        if (userBio) updates.bio = userBio;
+    
+        if (userPhoto && userPhoto.size > 0) { // Only upload if a valid file is selected
+          const photoRef = ref(storage, `users/${userDoc.id}/profile.jpg`);
+          await uploadBytes(photoRef, userPhoto);
+          updates.photoURL = await getDownloadURL(photoRef);
+        }
+    
+        if (coverPhoto && coverPhoto.size > 0) { // Only upload if a valid file is selected
+          const coverRef = ref(storage, `users/${userDoc.id}/cover.jpg`);
+          await uploadBytes(coverRef, coverPhoto);
+          updates.coverImageURL = await getDownloadURL(coverRef);
+        }
+    
+        await updateDoc(userDocRef, updates);
+        alert("Profile updated successfully!");
+      } catch (error) {
+        console.error("Error updating profile:", error);
+      } finally {
+        setLoading(false); // Hide loader
       }
-  
-      if (coverPhoto && coverPhoto.size > 0) { // Only upload if a valid file is selected
-        const coverRef = ref(storage, `users/${user.uid}/cover.jpg`);
-        await uploadBytes(coverRef, coverPhoto);
-        updates.coverImageURL = await getDownloadURL(coverRef);
-      }
-  
-      await updateDoc(userDocRef, updates);
-      alert("Profile updated successfully!");
-    } catch (error) {
-      console.error("Error updating profile:", error);
-    } finally {
-      setLoading(false); // Hide loader
-    }
-  };
-  
+    };
+
   useEffect(() => {
     if (email) {
-      const auth = getAuth();
-
-      onAuthStateChanged(auth, async (user) => {
-        if (user?.email === email) {
-          try {
-            const userDocRef = doc(db, "users", user.uid);
-            const userDocSnap = await getDoc(userDocRef);
-
-            if (userDocSnap.exists()) {
-              const userData = userDocSnap.data();
-              setUserName(userData.name || null);
-              setUserBio(userData.bio || null);
-              setUserPhoto(userData.photoURL || null);
-              setCoverPhoto(userData.coverImageURL || null);
-            } else {
-              console.log("No user data found for UID:", user.uid);
-            }
-          } catch (error) {
-            console.error("Error fetching user details: ", error);
+      const fetchUserDetails = async () => {
+        setLoading(true);
+        try {
+          const userQuery = query(collection(db, "users"), where("email", "==", email));
+          const querySnapshot = await getDocs(userQuery);
+          const userDoc = querySnapshot.docs[0];
+          
+          if (userDoc) {
+            const userData = userDoc.data();
+            setUserName(userData.name || "");
+            setUserBio(userData.bio || "");
+            setUserPhoto(userData.photoURL || null);
+            setCoverPhoto(userData.coverImageURL || null);
           }
-        }
-      });
+        } catch (error) {
+          console.error("Error fetching user details: ", error);
+        }finally {
+            setLoading(false); // Set loading to false once fetching is complete (either success or error)
+          }
+      };
+      fetchUserDetails();
     }
   }, [email]);
+
   const profileImageSrc = userPhoto instanceof File
-  ? URL.createObjectURL(userPhoto)
-  : userPhoto || "/path/to/placeholder-image.jpg";
+    ? URL.createObjectURL(userPhoto)
+    : userPhoto || "/path/to/placeholder-image.jpg";
 
-const coverImageSrc = coverPhoto instanceof File
-  ? URL.createObjectURL(coverPhoto)
-  : coverPhoto || "/path/to/placeholder-cover.jpg";
-
+  const coverImageSrc = coverPhoto instanceof File
+    ? URL.createObjectURL(coverPhoto)
+    : coverPhoto || "/path/to/placeholder-cover.jpg";
   
   return (
     <div className="bg-white relative min-h-screen">
-          <div className="relative h-[220px]">
+          <div className="relative md:h-[365px] h-[220px]">
             <div></div>
         <FaArrowLeftLong className="absolute top-[23px] left-[20px] text-white text-xl z-10" onClick={() => navigate("/profile")} ></FaArrowLeftLong>
       <h1 className="absolute top-[20px] left-[35px] text-white text-lg font-bold ml-4 z-10">Edit Profile</h1>
-      <div className="relative w-full h-[165px] rounded-b-[15px]">
+      <div className="relative w-full md:h-[300px] h-[165px] rounded-b-[15px]">
   <img
     src={coverImageSrc}
     alt="coverimage"
@@ -116,7 +117,7 @@ const coverImageSrc = coverPhoto instanceof File
 
   <div className="absolute inset-0 bg-black bg-opacity-20 rounded-b-[15px]"></div>
   </div>
-  <div className="flex gap-4 absolute top-[120px] left-[15px] right-[15px]">
+  <div className="flex gap-4 absolute md:top-[255px] top-[120px] left-[15px] right-[15px]">
   <div className="relative w-[90px] h-[90px]">
     <img
       src={profileImageSrc}
@@ -172,7 +173,7 @@ const coverImageSrc = coverPhoto instanceof File
       </div>
       {loading && (
   <div className="fixed inset-0 bg-white flex justify-center items-center z-50">
-    <div className="loader">Loading...</div>
+    <div className="loader"></div>
   </div>
 )}
 

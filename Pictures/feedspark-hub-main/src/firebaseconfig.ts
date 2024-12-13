@@ -21,7 +21,7 @@ import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // Log to confirm environment variables
-console.log("envapi", process.env.REACT_APP_FIREBASE_API_KEY);
+// console.log("envapi", process.env.REACT_APP_FIREBASE_API_KEY);
 
 const firebaseConfig = {
   apiKey: process.env.REACT_APP_FIREBASE_API_KEY,

@@ -113,42 +113,42 @@ const handleGoogleSignIn = async () => {
       <div className="grid grid-cols-3 gap-2 w-full">
   {/* Column 1 */}
   <div className="flex flex-col gap-2">
-  <img src="/images/img1.jpg" alt="img-1" className="w-full h-[200px] object-cover" />
-  <img src="/images/img2.jpg" alt="img-2" className="w-full h-[200px] object-cover" />
-  <img src="/images/img3.jpg" alt="img-3" className="w-full h-[200px] object-cover" />
+  <img src="/images/img1.jpg" alt="img-1" className="w-full h-[30vh] object-cover" />
+  <img src="/images/img2.jpg" alt="img-2" className="w-full h-[30vh] object-cover" />
+  <img src="/images/img3.jpg" alt="img-3" className="w-full h-[30vh] object-cover" />
   </div>
   {/* Column 2 */}
   <div className="flex flex-col gap-2">
   <img
     src="/images/img4.jpg"
     alt="img-4"
-    className="col-start-2  w-full h-[80px] object-cover"
+    className="col-start-2  w-full h-[14vh] object-cover"
   />
   <img
     src="/images/img5.jpg"
     alt="img-5"
-    className=" w-full h-[200px] object-cover"
+    className=" w-full h-[30vh] object-cover"
   />
     <img
     src="/images/img9.jpg"
     alt="img-9"
-    className=" w-full h-[200px] object-cover"
+    className=" w-full h-[30vh] object-cover"
   />
 </div>
   {/* Column 3 */}
   <div  className="flex flex-col gap-2">
-  <img src="/images/img6.jpg" alt="img-6" className=" w-full h-[200px] object-cover" />
+  <img src="/images/img6.jpg" alt="img-6" className=" w-full h-[30vh] object-cover" />
   <img
     src="/images/img7.jpg"
     alt="img-7"
-    className=" w-full h-[200px] object-cover"
+    className=" w-full h-[30vh] object-cover"
   />
-  <img src="/images/img8.jpg" alt="img-8" className=" w-full h-[200px] object-cover" />
+  <img src="/images/img8.jpg" alt="img-8" className=" w-full h-[30vh] object-cover" />
   </div>
 </div>
 
       {/* App logo and description */}
-      <div className="rounded-t-[50px] bg-white absolute bottom-[-25px] left-0 right-0 flex justify-center flex-col ">
+      <div className="rounded-t-[50px] bg-white absolute top-[77vh] left-0 right-0 flex justify-center flex-col min-h-[15vh] ">
       <div className="mt-4 text-center">
         <h1 className="text-3xl font-bold">Vibesnap</h1>
         <p className="text-gray-500 mt-1">Moments That Matter, Shared Forever.</p>

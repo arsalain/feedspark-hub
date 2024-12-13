@@ -14,6 +14,7 @@ import  { Swiper as SwiperClass } from 'swiper'
 
 function ProfilePage() {
   const email = useSelector((state: RootState) => state.auth.email);
+  const [loading, setLoading] = useState<boolean>(false);
   const [userName, setUserName] = useState("");
   const [userBio, setUserBio] = useState("");
   const [userPhotoURL, setUserPhotoURL] = useState("");
@@ -24,6 +25,7 @@ function ProfilePage() {
 
   useEffect(() => {
     const fetchUserDetails = async () => {
+        setLoading(true);
       if (email) {
         try {
           // Query Firestore for user details using email
@@ -50,6 +52,7 @@ function ProfilePage() {
           console.error("Error fetching user details:", error);
         }
       }
+       setLoading(false); 
     };
 
     const fetchUserPosts = async (userID: any) => {
@@ -130,13 +133,13 @@ function ProfilePage() {
     <SwiperSlide key={index}>
       {mediaItem.type === "image" ? (
         <img
-          className="w-full md:h-[350px] h-[250px] object-cover rounded-lg"
+          className="w-full md:h-[350px] h-[220px] object-cover rounded-lg"
           src={mediaItem.url}
           alt={`Media ${index + 1}`}
         />
       ) : (
         <video
-          className="w-full h-[250px] object-cover rounded-lg"
+          className="w-full h-[220px] object-cover rounded-lg"
           src={mediaItem.url}
           controls
         />
@@ -164,11 +167,16 @@ function ProfilePage() {
       </div>
       </div>
       <div
-        className="absolute bottom-[20px] right-[10px] bg-black rounded-full w-[50px] h-[50px] text-white flex items-center justify-center z-50"
+        className="fixed bottom-[20px] right-[10px] bg-black rounded-full w-[50px] h-[50px] text-white flex items-center justify-center z-50"
         onClick={() => navigate("/create-post")}
       >
         <GoPlus className="text-white text-2xl" />
       </div>
+      {loading && (
+  <div className="fixed inset-0 bg-white flex justify-center items-center z-50">
+    <div className="loader"></div>
+  </div>
+)}
     </div>
   );
 }
