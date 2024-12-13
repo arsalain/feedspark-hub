@@ -53,3 +53,18 @@
     transform: rotate(360deg);
   }
 }
+.swiper-pagination {
+  position: relative;
+}
+.swiper-pagination-bullet .swiper-pagination-bullet-active {
+  background-color: #000 !important;
+}
+.swiper-pagination-bullet-active {
+  background-color: #000 !important;
+}
+.swiper-pagination-bullet {
+  background-color: #000 !important;
+}
+.swiper-pagination-horizontal.swiper-pagination-bullets .swiper-pagination-bullet {
+  background-color: #000 !important;
+}

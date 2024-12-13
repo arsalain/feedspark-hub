@@ -3,16 +3,31 @@ import { FaArrowLeftLong } from "react-icons/fa6";
 import { BiSelectMultiple } from "react-icons/bi";
 import { IoCameraOutline } from "react-icons/io5";
 import { FaArrowsRotate } from "react-icons/fa6";
-import { Swiper, SwiperSlide } from 'swiper/react';
+import { Swiper,SwiperSlide } from 'swiper/react';
+import  { Swiper as SwiperClass } from 'swiper'
+import { useSelector } from "react-redux";
+import { RootState } from "../store";
 import "swiper/css";
 import "swiper/css/pagination";
 import {  Pagination } from 'swiper/modules';
+import { getAuth } from "firebase/auth";
+import { getFirestore, collection, writeBatch, doc, Timestamp,query, where, getDocs } from "firebase/firestore";
+import { FirebaseError } from "firebase/app";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import axios from 'axios';
+import { useNavigate } from "react-router-dom";
 // Media type interface
 interface MediaItem {
+  file?: File; 
   type: "image" | "video";
   src: string;
 }
-
+interface MediaItema {
+    file?: File;    // Optional file property (for file input)
+    src?: string;   // Optional URL property (for media from URL)
+    type: string;   // The type of the media (e.g., 'image/jpeg', 'video/mp4', etc.)
+  }
+  
 const CreatePost: React.FC = () => {
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -22,78 +37,67 @@ const CreatePost: React.FC = () => {
   const videoRefs = useRef<Map<number, HTMLVideoElement>>(new Map());
   const cameraVideoRef = useRef<HTMLVideoElement>(null);
   const [isPreviewVisible, setIsPreviewVisible] = useState(false);
-  const [currentMode, setCurrentMode] = useState("Photo");
-  const modes = ["Photo"];
-
-  // Fetch random images
-  const fetchRandomImage = async () => {
-    const randomId = Math.floor(Math.random() * 1000);
-    return `https://picsum.photos/600/800??forest,nature&random=${randomId}`;
-  };
-
-  const videoSources = [
-    "https://videos.pexels.com/video-files/1093662/1093662-hd_1280_720_30fps.mp4",
-    "https://videos.pexels.com/video-files/4812203/4812203-hd_1080_1920_30fps.mp4",
-    "https://videos.pexels.com/video-files/5946371/5946371-sd_960_540_30fps.mp4",
-    "https://videos.pexels.com/video-files/4763824/4763824-hd_1280_720_24fps.mp4",
-    "https://www.w3schools.com/html/movie.mp4",
-    "https://samplelib.com/lib/preview/mp4/sample-5s.mp4",
-  ];
-
-  const fetchRandomVideo = async () => {
-    const randomIndex = Math.floor(Math.random() * videoSources.length);
-    return videoSources[randomIndex];
-  };
-
-  const fetchMoreMedia = async () => {
-    setLoading(true);
-
-    const videoSet = new Set<string>();
-    const newMedia: MediaItem[] = [];
-
-    while (newMedia.length < 12) {
-      const isImage = newMedia.length % 4 !== 3; // 3 images followed by 1 video
-      if (isImage) {
-        const imageSrc = await fetchRandomImage();
-        newMedia.push({ type: "image", src: imageSrc });
-      } else {
-        let videoSrc = await fetchRandomVideo();
-        while (videoSet.has(videoSrc)) {
-          videoSrc = await fetchRandomVideo(); // Ensure video is unique
+  const [currentSlide, setCurrentSlide] = useState(1);
+  const [postMessage, setPostMessage] = useState<string>('');
+const [hashtags, setHashtags] = useState<string>('');
+const [page, setPage] = useState(1);
+const email = useSelector((state: RootState) => state.auth.email); 
+const navigate = useNavigate();
+  
+useEffect(() => {
+    const fetchMedia = async () => {
+      setLoading(true);
+      const newMedia: MediaItem[] = [];
+      try {
+        const response = await axios.get(
+          `http://localhost:4000/fetch-media?page=${page}&query=nature`
+        );
+  
+        // Log data to understand the structure
+        console.log(response.data.images, "images");
+        console.log(response.data.videos, "videos");
+  
+        // Add fetched images
+        if (response.data.images) {
+          newMedia.push(
+            ...response.data.images.map((item: { src: { original: string; [key: string]: string } }) => ({
+              type: "image",
+              src: item.src.original,
+            }))
+          );
         }
-        videoSet.add(videoSrc);
-        newMedia.push({ type: "video", src: videoSrc });
+  
+        // Add fetched videos
+        if (response.data.videos) {
+          newMedia.push(
+            ...response.data.videos.map((item: { video_files: Array<{ link: string }> }) => ({
+              type: "video",
+              src: item.video_files[0]?.link, // Take the first available video quality
+            }))
+          );
+        }
+  
+        // Ensure you're not adding the same media
+        setMedia((prevMedia) => {
+          const updatedMedia = [
+            ...prevMedia,
+            ...newMedia.filter((newItem) => 
+              !prevMedia.some((prevItem) => prevItem.src === newItem.src)
+            )
+          ];
+          return updatedMedia;
+        });
+  
+      } catch (error) {
+        console.error("Error loading media:", error);
+      } finally {
+        setLoading(false);
       }
-    }
-
-    setMedia((prevMedia) => [...prevMedia, ...newMedia]);
-    setLoading(false);
-  };
-//   const handleMediaFromStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
-//     const files = Array.from(event.target.files || []);
-    
-//     const newMedia = files
-//       .map((file) => {
-//         // Ensure type is either "image" or "video"
-//         const mediaType = file.type.startsWith("video")
-//           ? "video"
-//           : file.type.startsWith("image")
-//           ? "image"
-//           : null;
+    };
   
-//         if (mediaType) {
-//           return {
-//             type: mediaType, // TypeScript now knows this is either "image" or "video"
-//             src: URL.createObjectURL(file),
-//           };
-//         }
-//         return null;
-//       })
-//       .filter((item): item is MediaItem => item !== null); // Type guard to ensure only valid MediaItems
+    fetchMedia();
+  }, [page]);
   
-//     setMedia((prevMedia) => [...prevMedia, ...newMedia]);
-//     setIsPreviewVisible(true); 
-//   };
 const handleMediaFromStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
   
@@ -121,9 +125,9 @@ const handleMediaFromStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
     setIsPreviewVisible(true);
   };
   
-  useEffect(() => {
-    fetchMoreMedia();
-  }, []);
+//   useEffect(() => {
+//     fetchMoreMedia();
+//   }, []);
 
   useEffect(() => {
     if (media.length > 0 && selectedMedia.length === 0) {
@@ -153,6 +157,17 @@ const handleMediaFromStorage = (event: React.ChangeEvent<HTMLInputElement>) => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setCameraStream(stream);
       setShowCamera(true);
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+    }
+  };
+  const isPreview = async () => {
+    try {
+        if (showCamera){ 
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      setCameraStream(stream);
+    }
+      setIsPreviewVisible(false);
     } catch (err) {
       console.error("Error accessing camera:", err);
     }
@@ -188,8 +203,155 @@ console.log("selected",selectedMedia)
       console.error("Error toggling camera:", err);
     }
   };
+const capturePhoto = () => {
+    if (cameraVideoRef.current) {
+      const videoElement = cameraVideoRef.current;
+      const canvas = document.createElement('canvas');
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+      const context = canvas.getContext('2d');
+      if (context) {
+        context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+        const photoSrc = canvas.toDataURL('image/jpeg'); // Get the photo as a base64 string
+        // setMedia([{ type: 'image', src: photoSrc }]); // Only set camera image
+        setMedia((prevMedia) => [...prevMedia]);
+        setSelectedMedia([{ type: 'image', src: photoSrc }]); // Ensure only camera image is selected
+        setIsPreviewVisible(true); // Navigate to preview after capturing the photo
+      }
+    }
+  };
+// Update the `fetchUserId` function to ensure proper permission handling
+const fetchUserId = async (email: string): Promise<string | null> => {
+    try {
+      const db = getFirestore();
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("email", "==", email)); // Create query with email filter
+  
+      // Fetch the documents from Firestore
+      const querySnapshot = await getDocs(q); // Execute the query
+  
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0]; // Assuming email is unique
+        return userDoc.id; // Return the document ID as userId
+      } else {
+        console.error("User not found!");
+        return null;
+      }
+    } catch (error) {
+      console.error("Error fetching user ID:", error);
+      return null;
+    }
+  };
+  
+  const savePost = async () => {
+    setLoading(true);
+    try {
+      console.log(email, "email");
+  
+      if (!email) {
+        alert("User is not authenticated. Unable to fetch email.");
+        setLoading(false);
+        return;
+      }
+  
+      const userId = await fetchUserId(email); // Fetch userId from users table
+      if (!userId) {
+        alert("Unable to fetch userId. Please try again.");
+        setLoading(false);
+        return;
+      }
+  
+      const db = getFirestore();
+      const storage = getStorage();
+      const batch = writeBatch(db);
+      const postsCollectionRef = collection(db, "posts");
+      console.log("Selected Media:", selectedMedia);
+  
+      // Process and upload media directly within the savePost function
+      const postMedia = await Promise.all(
+        selectedMedia.map(async (media, index) => {
+          try {
+            console.log(`Processing media ${index + 1}:`, media.src);
+  
+            let blob;
+  
+            // Check if the media is a file or a URL
+            if (media.file) {
+              // Use the file directly (e.g., from <input type="file">)
+              blob = media.file;
+            } else if (media.src) {
+              // Handle URLs: Download and convert to Blob
+              const sanitizedUrl = media.src.replace(/\?{2,}/g, "?");
+              const response = await fetch(sanitizedUrl);
+  
+              if (!response.ok) {
+                throw new Error(`Failed to fetch media: ${response.status} - ${response.statusText}`);
+              }
+  
+              blob = await response.blob();
+            } else {
+              throw new Error("Invalid media format: Neither file nor URL provided");
+            }
+  
+            // Generate a unique storage path
+            const mediaRef = ref(
+              storage,
+              `posts/${userId}/${Date.now()}-${Math.random()}.${media.type}`
+            );
+  
+            // Upload the Blob to Firebase Storage
+            await uploadBytes(mediaRef, blob);
+  
+            // Get the download URL of the uploaded file
+            const mediaUrl = await getDownloadURL(mediaRef);
+  
+            console.log(`Uploaded media ${index + 1} successfully:`, mediaUrl);
+  
+            return { type: media.type, url: mediaUrl };
+          } catch (error) {
+            console.error(`Error processing media ${index + 1}:`, error);
+            return null; // Skip failed media
+          }
+        })
+      );
+  
+      // Filter out any failed uploads (null values)
+      const filteredMedia = postMedia.filter((media) => media !== null);
+  
+      // Create the new post document
+      const newPost = {
+        userId,
+        message: postMessage,
+        hashtags: hashtags,
+        media: filteredMedia,
+        likes: 0,
+        timestamp: Timestamp.now(),
+      };
+  
+      const postDocRef = doc(postsCollectionRef);
+      batch.set(postDocRef, newPost);
+  
+      // Commit the batch
+      await batch.commit();
+      alert("Post created successfully!");
+      navigate(-1)
+    } catch (error) {
+      console.error("Error saving post:", error);
+      alert("Error saving post");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleLoadMore = () => {
+    setPage((prevPage) => prevPage + 1); // Increment page to fetch next set of media
+  };
+  
+  
+  
+
+  
   return (
-    <div className="">
+    <div className="relative">
       {/* Camera Layout */}
       {showCamera && !isPreviewVisible && (
         <div className="relative w-full h-[100vh] bg-black">
@@ -233,7 +395,7 @@ console.log("selected",selectedMedia)
   />
 </div>
 
-            <div className=" bg-black w-[80px] h-[80px] rounded-full flex items-center justify-center shadow-lg border border-white">
+            <div className=" bg-black w-[80px] h-[80px] rounded-full flex items-center justify-center shadow-lg border border-white" onClick={capturePhoto}>
 
           </div>
 
@@ -267,59 +429,95 @@ console.log("selected",selectedMedia)
               />
             )}
             <div className="absolute inset-0 bg-black bg-opacity-20 "></div>
-            <FaArrowLeftLong className="absolute top-[23px] left-[20px] text-white text-xl z-10 font-bold" />
+            <FaArrowLeftLong className="absolute top-[23px] left-[20px] text-white text-xl z-10 font-bold" onClick={() => navigate(-1)} />
             <div className="absolute right-4 top-4 text-white text-lg z-10 font-bold" onClick={() => setIsPreviewVisible(true)}>Next</div>
           </div>
         </div>
       )}
  {isPreviewVisible && selectedMedia.length > 0 && (
-  <div>
-    <div className="relative">
-      {/* Swiper Layout */}
-      <FaArrowLeftLong
-      className="absolute top-[23px] left-[20px] text-white text-xl z-10 font-bold cursor-pointer"
-      onClick={() => setIsPreviewVisible(false)} // Navigates back to the gallery
-    />
-    <div className="relative">
-      <div className="w-full h-[50vh] overflow-hidden">
-      <Swiper
-      spaceBetween={50}
-      slidesPerView={1}
-      modules={[ Pagination]}
-      className="w-full h-[50vh]"
-    >
-      {selectedMedia.map((item, index) => (
-        <SwiperSlide key={index}>
-          {item.type === "image" ? (
-            <img
-              src={item.src}
-              alt={`Selected Media ${index + 1}`}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <video
-              src={item.src}
-              className="w-full h-full object-cover"
-              controls
-            />
-          )}
-        </SwiperSlide>
-      ))}
-    </Swiper>
-    
-      </div>
-      <div className="flex justify-center mt-4 items-center text-black">
-        <div className={`swiperslide`}></div>
-      </div>
-      </div>
+<div>
+  <div className="relative min-h-screen">
+    {/* Back Navigation */}
+    <FaArrowLeftLong
+      className="absolute top-[23px] left-[20px] text-black text-xl z-10 font-bold cursor-pointer"
+      onClick={isPreview}
+    //   onClick={() => setIsPreviewVisible(false)}
+    />                
+    <div className="text-black absolute top-[18px] left-[60px] font-bold text-xl">
+      New Post
+    </div>
 
-      {/* Navigation for Left Arrow */}
-      <div className="absolute right-4 top-4 text-white text-lg z-10 font-bold">
-        Create
+    {/* Swiper Section */}
+    <div className="relative px-8 pb-4 md:px-[100px] pt-[80px]">
+      <div className="w-full h-[40vh] overflow-hidden rounded-lg relative">
+        <Swiper
+          spaceBetween={50}
+          slidesPerView={1}
+          pagination={{
+            el: `.swiper-pagination`,
+            clickable: true,
+          }}
+          onSlideChange={(swiper: SwiperClass) => setCurrentSlide(swiper.activeIndex + 1)}
+          modules={[Pagination]}
+          className="w-full h-[50vh]"
+        >
+          {selectedMedia.map((item, index) => (
+            <SwiperSlide key={index}>
+              {item.type === "image" ? (
+                <img
+                  src={item.src}
+                  alt={`Selected Media ${index + 1}`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <video
+                  src={item.src}
+                  className="w-full h-full object-cover"
+                  controls
+                />
+              )}
+            </SwiperSlide>
+          ))}
+        </Swiper>
+
+        {/* Slide Indicator */}
+        <div className="absolute top-2 right-2 text-black text-sm px-2 py-[2px] rounded-full bg-white z-20">
+          {currentSlide}/{selectedMedia.length}
+        </div>
+      </div>
+      <div className="flex justify-center md:mt-6 mt-3 items-center text-black">
+        <div className="swiper-pagination"></div>
       </div>
     </div>
+
+    {/* Post Inputs */}
+    <div className="px-4">
+    <textarea
+  value={postMessage}
+  onChange={(e) => setPostMessage(e.target.value)}
+  className="w-full p-1 text-black text-lg focus:outline-none focus:ring-0"
+  placeholder="Write a post..."
+></textarea>
+
+<input
+  type="text"
+  value={hashtags}
+  onChange={(e) => setHashtags(e.target.value)}
+  className="w-full p-1 text-blue-500 text-lg focus:outline-none focus:ring-0"
+  placeholder="Add hashtags like #Techie"
+/>
+
+      </div>
+    </div>
+
+    {/* Create Button */}
+    <div className="absolute right-4 left-4 bottom-4 text-white bg-black py-1 text-lg z-10 font-bold rounded-full text-center"   onClick={savePost}
+    >
+      Create
+    </div>
   </div>
-  )}
+
+   )}
       {/* Gallery Section */}
       {!showCamera && selectedMedia.length > 0 && !isPreviewVisible && (
         <div>
@@ -388,13 +586,27 @@ console.log("selected",selectedMedia)
 
 
           {/* Loading Indicator */}
-          {loading && (
-            <div className="text-center my-4">
-              <span className="text-gray-500">Loading...</span>
-            </div>
-          )}
+         
+          <div className="flex justify-center items-center ">
+  {loading ? (
+    <div className="text-center py-4">Loading...</div>
+  ) : (
+    <button
+      onClick={handleLoadMore}
+      className="flex justify-center items-center px-4 py-2 my-4 bg-black text-white rounded-md"
+    >
+      Load More
+    </button>
+  )}
+</div>
+
         </div>
       )}
+       {loading && (
+  <div className="fixed inset-0 bg-white flex justify-center items-center z-50">
+    <div className="loader"></div>
+  </div>
+)}
     </div>
   );
 };

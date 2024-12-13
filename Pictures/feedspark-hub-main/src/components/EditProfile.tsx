@@ -91,7 +91,7 @@ const coverImageSrc = coverPhoto instanceof File
     <div className="bg-white relative min-h-screen">
           <div className="relative h-[220px]">
             <div></div>
-        <FaArrowLeftLong className="absolute top-[25px] left-[20px] text-white text-xl z-10" onClick={() => navigate("/profile")} ></FaArrowLeftLong>
+        <FaArrowLeftLong className="absolute top-[23px] left-[20px] text-white text-xl z-10" onClick={() => navigate("/profile")} ></FaArrowLeftLong>
       <h1 className="absolute top-[20px] left-[35px] text-white text-lg font-bold ml-4 z-10">Edit Profile</h1>
       <div className="relative w-full h-[165px] rounded-b-[15px]">
   <img

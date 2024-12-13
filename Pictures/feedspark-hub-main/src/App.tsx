@@ -5,6 +5,7 @@ import FeedPage from "./components/FeedPage";
 import ProfilePage from "./components/ProfilePage";
 import EditProfilePage from "./components/EditProfile";
 import CreatePost from "./components/CreatePost";
+import "./App.css";
 
 export default function App() {
   const isMobileOrTablet = window.innerWidth <= 1024;
